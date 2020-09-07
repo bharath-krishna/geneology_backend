@@ -1,0 +1,144 @@
+#!/usr/bin/env python
+
+# # NEW git version
+# git config core.hooksPath .githooks
+# OR
+# git config --local core.hooksPath .githooks/
+# OR
+# # register hooks folder with git (For older GIT versions like the mac apple: git version 2.17.2 (Apple Git-113) )
+# find .git/hooks -type l -exec rm {} \; && find .githooks -type f -exec ln -sf ../../{} .git/hooks/ \;
+
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from filecmp import cmp as filecompare
+
+ROOT = os.path.abspath(os.curdir)
+CWD = os.path.dirname(os.path.abspath(__file__))
+
+
+def system(*args, **kwargs):
+    kwargs.setdefault('stdout', subprocess.PIPE)
+    proc = subprocess.Popen(args, **kwargs)
+    out, err = proc.communicate()
+    return out
+
+
+def modified_files():
+    modified = re.compile(r'^[AM]+\s+(?P<name>.*\.py$)', re.MULTILINE)
+    files = system('git', 'status', '--porcelain').decode('utf-8')
+    files = modified.findall(files) or []
+    if not files:
+        print('There are no staged python file changes ...')
+
+    return files
+
+
+def pycodestyle():
+    files = modified_files()
+    tempdir = tempfile.mkdtemp()
+
+    for name in files:
+        filename = os.path.join(tempdir, name)
+        filepath = os.path.dirname(filename)
+
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+        with open(filename, 'w') as f:
+            system('git', 'show', ':' + name, stdout=f)
+
+    args = ['pycodestyle', '.']
+
+    output = system(*args, cwd=tempdir)
+    shutil.rmtree(tempdir)
+    if output:
+        print(u'PEP8 style violations have been detected.  Please fix them\n'
+              'or force the commit with "git commit --no-verify".\n')
+        print(output.decode('utf-8'), '\n')
+        sys.exit(1)
+    else:
+        print('There are no PEP8 violations.')
+
+
+def yapf():
+    files = modified_files()
+    tempdir = tempfile.mkdtemp()
+
+    # Verify that yapf is installed; if not, warn and exit.
+    try:
+        from yapf.yapflib.yapf_api import FormatFile
+    except ImportError:
+        print('yapf not on path; can not format. Please install yapf:')
+        print('    pipenv install yapf\n')
+        sys.exit(2)
+        return
+
+    changed_files = []
+    for name in files:
+        tempfilename = os.path.join(tempdir, name)
+        tempfilepath = os.path.dirname(tempfilename)
+
+        # create a copy of the file
+        if not os.path.exists(tempfilepath):
+            os.makedirs(tempfilepath)
+        with open(tempfilename, 'w') as f:
+            # save as temp file
+            system('git', 'show', ':' + name, stdout=f)
+
+        # apply yapf changes
+        FormatFile(name, in_place=True, style_config='setup.cfg')
+
+        # compare if there is any change
+        if not filecompare(name, tempfilename):
+            changed_files.append(name)
+
+    # clean up the temp directory
+    shutil.rmtree(tempdir)
+    if changed_files:
+        print(u'yapf fixed some files. They are not staged. Please verify and stage them and commit again \n'
+              'or force the commit with "git commit --no-verify".\n')
+        print(f'Files: \n {changed_files}\n')
+        sys.exit(1)
+    print('There are no yapf fixes.')
+
+
+def flake8():
+    files = modified_files()
+    tempdir = tempfile.mkdtemp()
+    for name in files:
+        filename = os.path.join(tempdir, name)
+        filepath = os.path.dirname(filename)
+
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+        with open(filename, 'w') as f:
+            system('git', 'show', ':' + name, stdout=f)
+
+    configfile = os.path.join(ROOT, 'setup.cfg')
+    args = ['flake8', f'--append-config={configfile}', '.']
+
+    output = system(*args, cwd=tempdir)
+    shutil.rmtree(tempdir)
+    if output:
+        print(u'\n\nPEP8 style (Flake8) violations have been detected.  Please fix them\n'
+              'or force the commit with "git commit --no-verify".\n')
+        print(output.decode('utf-8'), '\n')
+        sys.exit(1)
+
+    print('There are no PEP8 violations.')
+
+
+def main():
+    print('\n yapf \n -------')
+    yapf()
+    print('\n flake8 \n -------')
+    flake8()
+
+
+if __name__ == '__main__':
+    print('Start Running pycodestyle (PEP8)\n ')
+    main()
+    print('\n\n Done.\n\n')
