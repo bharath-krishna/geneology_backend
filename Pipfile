@@ -4,15 +4,25 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-ipdb = "0.13.3"
+ipdb = "*"
+isort = "*"
 
 [packages]
-fastapi = "0.61.1"
-jinja2 = "2.11.2"
-uvicorn = "0.14.0"
+fastapi = "*"
+jinja2 = "*"
+uvicorn = "*"
+pydantic = "*"
+python-multipart = "*"
+python-oauth2 = "*"
+python-keycloak = "*"
+requests-oauthlib = "*"
+fastapi-users = {extras = ["mongodb", "sqlalchemy"],version = "*"}
+aiohttp = "*"
+asyncio = "*"
+yapf = "*"
 
 [requires]
 python_version = "3.7"
 
 [scripts]
-api = "python main.py"
+api = "python api/main.py"

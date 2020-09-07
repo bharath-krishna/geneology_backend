@@ -1,4 +1,0 @@
-PORT = 8080
-LOG_LEVEL = 'debug'
-WORKERS = 30
-RELOAD = True

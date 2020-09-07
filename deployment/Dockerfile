@@ -4,8 +4,8 @@ FROM python:3.7.6-alpine3.11
 # For aiohttp multidict installation error below line is required
 RUN apk add build-base
 
-ARG USER=aiohttp
-ARG GROUP=aiohttp
+ARG USER=fastapi
+ARG GROUP=fastapi
 
 # # We cannot set as root because it will affect when we try to mount the volume
 ARG HOME=/home/${USER}
