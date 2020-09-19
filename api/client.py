@@ -1,9 +1,11 @@
 import asyncio
 import json
+from exceptions.responses import HTTPException
+from json.decoder import JSONDecodeError
 
 import aiohttp
 from aiohttp import ClientSession, TCPConnector
-from fastapi import Response
+from aiohttp.client_exceptions import ClientConnectorError
 from starlette import status
 
 from configs.logging import logger
@@ -35,7 +37,7 @@ class AiohttpClient():
         else:
             return self.fetch(method, url)
 
-    async def gather_urls(self, method, urls, **kwargs):
+    async def gather_urls(self, method, urls, return_exceptions=False, **kwargs):
         tasks = []
         self.get_session()
 
@@ -43,28 +45,27 @@ class AiohttpClient():
             task = asyncio.ensure_future(self.fetch(method, url))
             tasks.append(task)
 
-        responses = asyncio.gather(*tasks)
+        responses = asyncio.gather(*tasks, return_exceptions=return_exceptions)
         return await responses
 
     async def fetch(self, method, url):
         self.get_session()
-        response = Response(content=f"No Data", status_code=status.HTTP_400_BAD_REQUEST)
         async with self.sem:
             try:
                 response = await self.session.get(url)
-            except Exception as e:
-                logger.error(e)
-                response = Response(content=f"Error fetching from URL {url}. {e}",
-                                    status_code=status.HTTP_400_BAD_REQUEST)
-                return response
+            except ClientConnectorError as e:
+                logger.error(str(e))
+                raise HTTPException(url=url, message=str(e), status=status.HTTP_400_BAD_REQUEST)
 
             resp = await response.read()
             try:
-                response = json.loads(resp)
-                logger.info({"called_url": url, "status": status.HTTP_200_OK})
-            except Exception:
-                response = Response(content=resp, status_code=status.HTTP_400_BAD_REQUEST)
-                logger.error({"url": url, "status": response.status})
+                response = json.loads(resp) or {}
+                message = f'url: {url}, status: {status.HTTP_200_OK}'
+                logger.info(message)
+            except JSONDecodeError as e:
+                error_message = str(e) + ', ' + e.doc
+                logger.error(f'url: {url}, response: {str(resp)}, message: {error_message}, status: {response.status}')
+                raise HTTPException(url=url, response=str(resp), message=error_message, status=response.status)
             return response
 
     # TODO: check for these events

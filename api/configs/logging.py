@@ -3,10 +3,9 @@ import logging
 
 class BaseLoggingConfig():
     version = 1
-    # level = logging.DEBUG
     formatters = {
         'default': {
-            'format': '%(asctime)s %(levelname)+8.8s [%(name)s] - %(message)s ',
+            'format': '%(asctime)s %(levelname)+8.8s [%(name)s] - %(message)s',
             'datefmt': '%Y-%m-%dT%H:%M:%S%z',
         },
         'dict': {
@@ -32,21 +31,16 @@ class BaseLoggingConfig():
             "formatter": "dict",
         },
     }
-
     root = {'handlers': ['console']}
-
-    # Level      Value
-    # CRITICAL    50
-    # ERROR       40
-    # WARNING     30
-    # INFO        20
-    # DEBUG       10
-    # NOTSET      0
-
     loggers = {
+        "uvicorn": {
+            "level": "DEBUG",
+            "handlers": ['console'],
+            "propagate": False,
+        },
         "uvicorn.access": {
             "level": "DEBUG",
-            "handlers": ['uvicorn_access_console'],
+            "handlers": ['console'],
             "propagate": False,
         },
         "uvicorn.error": {

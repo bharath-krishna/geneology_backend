@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
@@ -21,6 +22,7 @@ kc = KeycloakOpenID(
     realm_name=ConfigReader().get('REALM'),
     verify=False,
 )
+
 
 class OAuth2Handler(OAuth2):
     authorizationUrl: str
@@ -58,10 +60,11 @@ async def require_user(token: str = Depends(oauth2_scheme)) -> UserInfo:
     try:
         userinfo = kc.userinfo(token=token)
     except KeycloakAuthenticationError as e:
-        logger.error(e)
+        error = json.loads(e.error_message)
+        logger.error(error['error_description'])
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
+            detail=error['error_description'],
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -71,7 +74,7 @@ async def require_user(token: str = Depends(oauth2_scheme)) -> UserInfo:
     except ValidationError as e:
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail="Invalid resonse",
+            detail=json.loads(e.json()),
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
