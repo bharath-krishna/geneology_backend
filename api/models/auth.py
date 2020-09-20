@@ -1,19 +1,14 @@
-import json
 from typing import Optional
 
-from fastapi import Depends, HTTPException, status
+from fastapi import HTTPException, status
 from fastapi.openapi.models import OAuthFlows
 from fastapi.security import OAuth2
 from fastapi.security.utils import get_authorization_scheme_param
 from keycloak import KeycloakOpenID
-from keycloak.exceptions import KeycloakAuthenticationError
-from pydantic import ValidationError
 from starlette.requests import Request
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 
 from configs.logging import logger
 from configs.readers import ConfigReader, SecretReader
-from models.users import UserInfo
 
 kc = KeycloakOpenID(
     server_url=ConfigReader().get('AUTH_URL'),
@@ -38,7 +33,7 @@ class OAuth2Handler(OAuth2):
             if self.auto_error:
                 logger.error(self.auto_error)
                 raise HTTPException(
-                    status_code=HTTP_401_UNAUTHORIZED,
+                    status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Not authenticated",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
@@ -54,27 +49,3 @@ def store_in_cookie(**kwargs):
 
 
 oauth2_scheme = OAuth2Handler(authorizationUrl='http://localhost:8099/auth/realms/demo/protocol/openid-connect/auth')
-
-
-async def require_user(token: str = Depends(oauth2_scheme)) -> UserInfo:
-    try:
-        userinfo = kc.userinfo(token=token)
-    except KeycloakAuthenticationError as e:
-        error = json.loads(e.error_message)
-        logger.error(error['error_description'])
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=error['error_description'],
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    try:
-        # del userinfo["sub"]
-        user = UserInfo(**userinfo)
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail=json.loads(e.json()),
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return user
