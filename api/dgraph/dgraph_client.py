@@ -19,8 +19,8 @@ class DgraphClient():
     async def sync_with_dgraph(self, person: Person):
         person.created_by = person.email
         await person.normalize()
-        people = self.query_person(person.email)
-        logger.info(f'{len(people)} person found for {self.email}')
+        people = self.search_by_email(person.email)
+        logger.info(f'{len(people)} person found for {person.email}')
         if not people:
             self.create_user(person)
         return
@@ -139,7 +139,7 @@ class DgraphClient():
 
     def query_all(self):
         query = """{
-            persons(func: has(name)) {
+            people(func: has(name)) {
                 name
                 email
                 gender

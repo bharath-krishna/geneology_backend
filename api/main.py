@@ -17,9 +17,15 @@ class Application(FastAPI):
         super().__init__(on_startup=[self.client.on_startup], on_shutdown=[self.client.on_shutdown], **kwargs)
 
 
-app = Application(docs_url='/', swagger_ui_oauth2_redirect_url='/callback')
-app.include_router(users.router)
+app = Application(
+    docs_url='/',
+    swagger_ui_oauth2_redirect_url='/callback',
+    title="Geneology Project - Backend",
+    description="Backend apis for building family tree used in geneology project",
+    version="1.0.0",
+)
 app.include_router(people.router)
+app.include_router(users.router)
 
 if __name__ == "__main__":
     log_config = uvicorn.config.LOGGING_CONFIG
