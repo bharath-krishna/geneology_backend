@@ -24,6 +24,18 @@ async def people(request: Request, user: Person = Depends(Person.require_user)):
     return client.query_all()
 
 
+@router.post("/people",
+             tags=['People'],
+             summary='Create list people',
+             description='',
+             response_model=Dict[str, List[Person]])
+async def create_people(request: Request, people: Dict[str, List[Person]], user: Person = Depends(Person.require_user)):
+    client = request.app.dg
+    for person in people["people"]:
+        client.create_user(person)
+    return people
+
+
 @router.get("/people/{email}", tags=['People'], summary='Search person by email', description='', response_model=Person)
 async def person(request: Request, email: str, person: Person = Depends(Person.require_user)):
     client = request.app.dg
@@ -68,7 +80,7 @@ async def partners(request: Request, email: str, person: Person = Depends(Person
 
 @router.patch("/people/{email}",
               tags=['People'],
-              summary='Upate person by  person',
+              summary='Upate person by email',
               description='',
               response_model=Person)
 async def update_person(request: Request, person: Person, email: str, user: Person = Depends(Person.require_user)):
@@ -79,13 +91,25 @@ async def update_person(request: Request, person: Person, email: str, user: Pers
     return updated_person
 
 
+@router.delete("/people/{email}",
+               tags=['People'],
+               summary='Delete person by email',
+               description='',
+               response_model=Person)
+async def delete_person(request: Request, email: str, user: Person = Depends(Person.require_user)):
+    client = request.app.dg
+    deleted_person = client.delete_user(email)
+    return deleted_person
+
+
 # These endpoints are for debug purposes
 # @router.get("/deleteme", response_model=Person)
 # async def deleteme(request: Request, user: Person = Depends(Person.require_user)):
 #     client = request.app.dg
 #     return client.delete_user(user)
 
-# @router.get("/deleteall", response_model=Person)
-# async def deleteall(request: Request, user: Person = Depends(Person.require_user)):
-#     client = request.app.dg
-#     return client.delete_all()
+
+@router.get("/deleteall", response_model=Person)
+async def deleteall(request: Request, user: Person = Depends(Person.require_user)):
+    client = request.app.dg
+    return client.delete_all()
