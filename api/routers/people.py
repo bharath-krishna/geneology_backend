@@ -3,7 +3,7 @@ from typing import Dict, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.requests import Request
 
-from models.person import Person
+from api.models.person import Person
 
 router = APIRouter()
 

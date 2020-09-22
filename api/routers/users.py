@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 
-from models.person import Person
+from api.models.person import Person
 
 router = APIRouter()
 

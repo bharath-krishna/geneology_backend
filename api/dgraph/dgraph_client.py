@@ -4,8 +4,8 @@ import pydgraph
 from fastapi.exceptions import HTTPException
 from starlette import status
 
-from configs.logging import logger
-from models.person import Person
+from api.configs.logging import logger
+from api.models.person import Person
 
 
 class DgraphClient():

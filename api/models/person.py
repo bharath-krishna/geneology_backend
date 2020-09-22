@@ -8,8 +8,8 @@ from keycloak.exceptions import KeycloakAuthenticationError
 from pydantic import BaseModel, ValidationError
 from starlette import status
 
-from configs.logging import logger
-from models.auth import kc, oauth2_scheme
+from api.configs.logging import logger
+from api.models.auth import kc, oauth2_scheme
 
 
 class Person(BaseModel):
@@ -49,7 +49,7 @@ class Person(BaseModel):
             # del userinfo["sub"]
             user = cls(**userinfo)
             user.is_authenticated = True
-            user.normalize()
+            await user.normalize()
         except ValidationError as e:
             logger.error(str(e))
             raise HTTPException(

@@ -1,6 +1,5 @@
 import asyncio
 import json
-from exceptions.responses import HTTPException
 from json.decoder import JSONDecodeError
 
 import aiohttp
@@ -8,7 +7,8 @@ from aiohttp import ClientSession, TCPConnector
 from aiohttp.client_exceptions import ClientConnectorError
 from starlette import status
 
-from configs.logging import logger
+from api.configs.logging import logger
+from api.exceptions.responses import HTTPException
 
 
 class AiohttpClient():

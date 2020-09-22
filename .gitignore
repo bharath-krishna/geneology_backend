@@ -2,3 +2,10 @@
 .coverage
 configs.json
 secrets.json
+sample_data.json
+sample_data.rdf
+schema.rdf
+uvicorn_access.log
+.vscode/launch.json
+htmlcov/*
+__pycache__/

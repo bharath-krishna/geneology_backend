@@ -7,8 +7,8 @@ from fastapi.security.utils import get_authorization_scheme_param
 from keycloak import KeycloakOpenID
 from starlette.requests import Request
 
-from configs.logging import logger
-from configs.readers import ConfigReader, SecretReader
+from api.configs.logging import logger
+from api.configs.readers import ConfigReader, SecretReader
 
 kc = KeycloakOpenID(
     server_url=ConfigReader().get('AUTH_URL'),

@@ -1,11 +1,11 @@
 import uvicorn
 from fastapi import FastAPI
 
-from client import AiohttpClient
-from configs import LOG_LEVEL, PORT, RELOAD, WORKERS
-from configs.logging import logger
-from dgraph.dgraph_client import DgraphClient
-from routers import people, users
+from api.client import AiohttpClient
+from api.configs import LOG_LEVEL, PORT, RELOAD, WORKERS
+from api.configs.logging import logger
+from api.dgraph.dgraph_client import DgraphClient
+from api.routers import people, users
 
 
 class Application(FastAPI):
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # log_config["formatters"]["access"]["fmt"] = '%(asctime)s %(levelname)s - %(message)s'
     log_config["formatters"]["access"]["fmt"] = ('{"time": \"%(asctime)s\", "level": \"%(levelname)s\", '
                                                  '"name": \"[%(name)s]\", "message": \"%(message)s\"}')
-    uvicorn.run("main:app",
+    uvicorn.run("api.main:app",
                 host="0.0.0.0",
                 port=int(PORT),
                 log_level=LOG_LEVEL,

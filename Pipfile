@@ -4,7 +4,6 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-ipdb = "*"
 isort = "*"
 
 [packages]
@@ -20,9 +19,11 @@ aiohttp = "*"
 asyncio = "*"
 yapf = "*"
 pydgraph = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.7"
 
 [scripts]
-api = "python api/main.py"
+api = "python -m api.main"
+tests = "python -m pytest"
