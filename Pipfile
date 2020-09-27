@@ -25,5 +25,5 @@ pytest = "*"
 python_version = "3.7"
 
 [scripts]
-api = "python -m api.main"
+api = "python run.py"
 tests = "python -m pytest"
