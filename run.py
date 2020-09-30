@@ -1,6 +1,6 @@
 import uvicorn
 
-from api.configs import LOG_LEVEL, PORT, RELOAD, WORKERS
+from api.configurations.base import config
 
 if __name__ == "__main__":
     log_config = uvicorn.config.LOGGING_CONFIG
@@ -8,11 +8,11 @@ if __name__ == "__main__":
     log_config["formatters"]["access"]["fmt"] = ('{"time": \"%(asctime)s\", "level": \"%(levelname)s\", '
                                                  '"name": \"[%(name)s]\", "message": \"%(message)s\"}')
     uvicorn.run("api.main:app",
-                host="0.0.0.0",
-                port=int(PORT),
-                log_level=LOG_LEVEL,
-                reload=RELOAD,
-                workers=WORKERS,
-                access_log=True,
+                host=config.host,
+                port=config.port,
+                log_level=config.log_level,
+                reload=config.reload,
+                workers=config.workers,
+                access_log=config.access_log,
                 log_config=log_config,
-                debug=True)
+                debug=config.debug)

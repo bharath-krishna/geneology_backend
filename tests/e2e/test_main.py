@@ -16,4 +16,4 @@ def test_people(user_client: CustomClient):
     assert response.status_code == 200
     json_response = response.json()
     for people in json_response['people']:
-        assert people['name'] in ['demo demo', 'Bharath Krishna']
+        assert people['name'] in ['demo demo']

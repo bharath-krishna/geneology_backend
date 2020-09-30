@@ -1,17 +1,22 @@
 import json
+from functools import lru_cache
 from typing import List
 
 import pydgraph
-from api.configs import DB_HOST, DB_PORT
-from api.configs.logging import logger
+from api.configurations.base import config
 from api.models.person import Person
 from fastapi.exceptions import HTTPException
 from starlette import status
 
 
+@lru_cache()
+def get_client():
+    return DgraphClient()
+
+
 class DgraphClient():
     def __init__(self):
-        self.client_stub = pydgraph.DgraphClientStub(f"{DB_HOST}:{DB_PORT}")
+        self.client_stub = pydgraph.DgraphClientStub(f"{config.db_host}:{config.db_port}")
         self.client = pydgraph.DgraphClient(self.client_stub)
 
     def drop_all(self):
@@ -84,7 +89,7 @@ class DgraphClient():
             ppl1 = json.loads(res1.json)
             for person in ppl1['all']:
                 txn.mutate(del_obj=person)
-                logger.info(f"{person['name']} deleted from db")
+                config.logger.info(f"{person['name']} deleted from db")
             txn.commit()
         finally:
             txn.discard()
@@ -106,7 +111,7 @@ class DgraphClient():
                                     detail=f'Not found. No person with name {name} found in database')
             for person in people['people']:
                 txn.mutate(del_obj=person)
-                logger.info(f"{person} deleted")
+                config.logger.info(f"{person} deleted")
             txn.commit()
         finally:
             txn.discard()
@@ -147,11 +152,11 @@ class DgraphClient():
         response = json.loads(res.json)
         if len(response['person']) > 1:
             error_message = f'found multiple results for email {email}'
-            logger.warning(error_message)
+            config.logger.warning(error_message)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_message)
         elif not len(response['person']):
             error_message = f'no matches found for {email}'
-            logger.warning(error_message)
+            config.logger.warning(error_message)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
         return response['person'][0]
 
@@ -191,11 +196,11 @@ class DgraphClient():
         response = json.loads(res.json)
         if len(response['person']) > 1:
             error_message = f'found multiple results for name {name}'
-            logger.warning(error_message)
+            config.logger.warning(error_message)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_message)
         elif not len(response['person']):
             error_message = f'no matches found for {name}'
-            logger.warning(error_message)
+            config.logger.warning(error_message)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
         return response['person'][0]
 
@@ -299,7 +304,7 @@ class DgraphClient():
         response = json.loads(res.json)
         if len(response['person']) > 2:
             error_message = f'found more than 2 parents for email {name}'
-            logger.warning(error_message)
+            config.logger.warning(error_message)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_message)
         elif not len(response['person']):
             return {"parents": []}

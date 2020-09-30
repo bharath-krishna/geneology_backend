@@ -14,8 +14,7 @@ router = APIRouter()
             description='This is the first landing endpoint',
             response_model=Person)
 async def me(request: Request, user: User = Depends(require_user)):
-    userinfo = await user.get_userinfo()
-    person = Person(**userinfo)
+    person = Person(**user.userinfo)
     await request.app.dg.sync_with_dgraph(person)
     return person
 
