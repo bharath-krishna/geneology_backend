@@ -204,6 +204,42 @@ class DgraphClient():
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
         return response['person'][0]
 
+    def search_for_person(self, name) -> Person:
+        query = """
+        {
+            person(func: eq(name, "%s")) {
+                uid
+                name
+                kcid
+                gender
+                email
+                created_by
+                username
+                partners {
+                    uid
+                    name
+                    kcid
+                    gender
+                    email
+                    created_by
+                    username
+                }
+                children {
+                    uid
+                    name
+                    kcid
+                    gender
+                    email
+                    created_by
+                    username
+                }
+            }
+        }
+        """ % name
+        res = self.client.txn(read_only=False).query(query)
+        response = json.loads(res.json)
+        return response['person']
+
     def query_all(self):
         query = """{
             people(func: has(name)) {

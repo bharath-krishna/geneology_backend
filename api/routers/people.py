@@ -30,6 +30,17 @@ async def people(request: Request, user: User = Depends(require_user)):
     return people
 
 
+@router.post("/people/search",
+             tags=['People'],
+             summary='Search for person',
+             description='',
+             response_model=List[Person])
+async def search_people(request: Request, person: Person, user: User = Depends(require_user)):
+    client = request.app.dg
+    people = client.search_for_person(person.name)
+    return people
+
+
 @router.post("/people",
              tags=['People'],
              summary='Create list people',
