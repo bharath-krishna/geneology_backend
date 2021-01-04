@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -33,3 +33,7 @@ Person.update_forward_refs()
 
 class ChildrenModel(BaseModel):
     children: List[Person]
+
+
+PeopleDict = Dict[str, List[Person]]
+People = List[Person]

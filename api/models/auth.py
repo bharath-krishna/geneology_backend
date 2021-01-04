@@ -143,7 +143,7 @@ class User():
         return userinfo
 
 
-async def require_user(request: Request, access_token: str = Depends(oauth2_scheme)):
+async def require_user(request: Request, access_token: str = Depends(oauth2_scheme)) -> User:
     user = User.log_user_in(access_token=access_token)
     config.logger.info(f"User {user.username} authenticated")
     request.state.user = user
