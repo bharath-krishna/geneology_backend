@@ -1,20 +1,21 @@
 import json
 from functools import lru_cache
-from typing import List
 
 import pydgraph
 from api.configurations.base import config
-from api.models.person import Person
+from api.models.person import People, PeopleDict, Person
 from fastapi.exceptions import HTTPException
 from starlette import status
 
 
 @lru_cache()
 def get_client():
-    return DgraphClient()
+    dg = Client()
+    dg.set_schema()
+    return dg
 
 
-class DgraphClient():
+class Client():
     def __init__(self):
         self.client_stub = pydgraph.DgraphClientStub(f"{config.db_host}:{config.db_port}")
         self.client = pydgraph.DgraphClient(self.client_stub)
@@ -160,7 +161,7 @@ class DgraphClient():
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
         return response['person'][0]
 
-    def search_by_name(self, name) -> Person:
+    def search_by_name(self, name: str) -> Person:
         query = """
         {
             person(func: eq(name, "%s")) {
@@ -204,7 +205,7 @@ class DgraphClient():
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_message)
         return response['person'][0]
 
-    def search_for_person(self, name) -> Person:
+    def search_for_person(self, name: str) -> Person:
         query = """
         {
             person(func: eq(name, "%s")) {
@@ -240,7 +241,7 @@ class DgraphClient():
         response = json.loads(res.json)
         return response['person']
 
-    def query_all(self):
+    def query_all(self) -> PeopleDict:
         query = """{
             people(func: has(name)) {
                 uid
@@ -258,7 +259,7 @@ class DgraphClient():
         ppl = json.loads(res.json)
         return ppl
 
-    def update_person(self, name: str, update_person: Person):
+    def update_person(self, name: str, update_person: Person) -> Person:
         txn = self.client.txn()
         person = self.search_by_name(name)
         if person:
@@ -270,7 +271,7 @@ class DgraphClient():
         txn.discard()
         return update_person
 
-    def get_children(self, name):
+    def get_children(self, name: str) -> PeopleDict:
         query = """
         {
             person(func: eq(name, "%s")) {
@@ -294,7 +295,7 @@ class DgraphClient():
             return {"children": []}
         return response['person'][0]
 
-    def update_children(self, name: str, children: List[Person]):
+    def update_children(self, name: str, children: People) -> PeopleDict:
         txn = self.client.txn()
         # query = """{
         #     person as var(func: eq(name, "%s"))
@@ -318,7 +319,7 @@ class DgraphClient():
         txn.do_request(request)
         return self.get_children(person['name'])
 
-    def get_parents(self, name):
+    def get_parents(self, name: str) -> PeopleDict:
         query = """
         {
             person(func: eq(name, "%s")) {
@@ -346,7 +347,7 @@ class DgraphClient():
             return {"parents": []}
         return response['person'][0]
 
-    def get_partners(self, name):
+    def get_partners(self, name: str) -> PeopleDict:
         query = """
         {
             person(func: eq(name, "%s")) {
@@ -386,7 +387,7 @@ class DgraphClient():
             response['person'][0]['partners'].extend(response['person'][0].pop('~partners'))
         return response['person'][0]
 
-    def update_partners(self, name: str, partners: List[Person]):
+    def update_partners(self, name: str, partners: People) -> PeopleDict:
         txn = self.client.txn()
         person = self.search_by_name(name)
 

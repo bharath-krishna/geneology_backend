@@ -3,17 +3,14 @@ import time
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from api import client
+from api.client import get_api_client
 from api.configurations.base import config
-from api.dgraph import dgraph_client
 from api.routers import people, users
 
 
 class Application(FastAPI):
     def __init__(self, **kwargs):
-        self.client = client.get_api_client()
-        self.dg = dgraph_client.get_client()
-        self.dg.set_schema()
+        self.client = get_api_client()
         config.logger.info("Application starting")
         super().__init__(on_startup=[self.client.on_startup], on_shutdown=[self.client.on_shutdown], **kwargs)
 
