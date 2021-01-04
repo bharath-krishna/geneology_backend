@@ -1,6 +1,6 @@
 import asyncio
 import json
-from exceptions.responses import HTTPException
+from functools import lru_cache
 from json.decoder import JSONDecodeError
 
 import aiohttp
@@ -8,7 +8,13 @@ from aiohttp import ClientSession, TCPConnector
 from aiohttp.client_exceptions import ClientConnectorError
 from starlette import status
 
-from configs.logging import logger
+from api.configurations.base import config
+from api.exceptions.responses import HTTPException
+
+
+@lru_cache()
+def get_api_client():
+    return AiohttpClient()
 
 
 class AiohttpClient():
@@ -19,12 +25,12 @@ class AiohttpClient():
     def get_session(self):
         if self.session is None:
             self.session = ClientSession(connector=TCPConnector(ssl=False))
-            logger.info("Client session created")
+            config.logger.info("Client session created")
 
     async def close_session(self):
         if hasattr(self, 'session'):
             await self.session.close()
-            logger.info('Client session closed')
+            config.logger.info('Client session closed')
             self.aiohttp_client = None
         return
 
@@ -54,17 +60,18 @@ class AiohttpClient():
             try:
                 response = await self.session.get(url)
             except ClientConnectorError as e:
-                logger.error(str(e))
+                config.logger.error(str(e))
                 raise HTTPException(url=url, message=str(e), status=status.HTTP_400_BAD_REQUEST)
 
             resp = await response.read()
             try:
                 response = json.loads(resp) or {}
                 message = f'url: {url}, status: {status.HTTP_200_OK}'
-                logger.info(message)
+                config.logger.info(message)
             except JSONDecodeError as e:
                 error_message = str(e) + ', ' + e.doc
-                logger.error(f'url: {url}, response: {str(resp)}, message: {error_message}, status: {response.status}')
+                config.logger.error(
+                    f'url: {url}, response: {str(resp)}, message: {error_message}, status: {response.status}')
                 raise HTTPException(url=url, response=str(resp), message=error_message, status=response.status)
             return response
 

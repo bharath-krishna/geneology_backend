@@ -4,8 +4,8 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-ipdb = "*"
 isort = "*"
+ipdb = "*"
 
 [packages]
 fastapi = "*"
@@ -16,13 +16,16 @@ python-multipart = "*"
 python-oauth2 = "*"
 python-keycloak = "*"
 requests-oauthlib = "*"
-fastapi-users = {extras = ["mongodb", "sqlalchemy"],version = "*"}
 aiohttp = "*"
 asyncio = "*"
 yapf = "*"
+pydgraph = "*"
+pytest = "*"
+flake8 = "*"
 
 [requires]
 python_version = "3.7"
 
 [scripts]
-api = "python api/main.py"
+api = "python run.py"
+tests = "python -m pytest"
